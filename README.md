@@ -1,120 +1,183 @@
-# 🫀 Face Vitals Prototype  
-Camera-Based Heart Rate & Respiratory Rate Estimation
+# 🫀 FaceVitals – Camera-Based Heart & Respiratory Rate Monitor
 
----
+## 📌 Overview
 
-## 📌 Project Description
+**FaceVitals** is a non-contact health monitoring system that estimates:
 
-Face Vitals Prototype is a non-contact vital sign monitoring system that estimates:
+* ❤️ **Heart Rate (HR)** – Beats Per Minute (BPM)
+* 🌬️ **Respiratory Rate (RR)** – Breaths Per Minute
 
-- **Heart Rate (BPM)**
-- **Respiratory Rate (Breaths per Minute)**
-
-using only a standard webcam.
-
-The system detects subtle color changes in the forehead caused by blood circulation (remote Photoplethysmography - rPPG). These temporal pixel variations are processed using signal processing techniques and machine learning to estimate vital signs.
+using a standard camera by analyzing **temporal pixel variations** in facial skin.
 
 ---
 
 ## 🚀 Features
 
-- Face detection using OpenCV Haar Cascade
-- Forehead region extraction
-- RGB signal collection from webcam frames
-- POS (Plane-Orthogonal-to-Skin) signal processing
-- Bandpass filtering for heart and respiratory bands
-- FFT-based frequency estimation
-- Sliding window analysis
-- Random Forest ML-based heart rate prediction
-- Streamlit web interface
-- Signal visualization using Matplotlib
+* 📷 Real-time face detection & forehead ROI extraction
+* 🎨 RGB signal processing
+* 🧠 rPPG (Remote Photoplethysmography)
+* ⚙️ POS algorithm for signal enhancement
+* 📈 FFT-based frequency estimation
+* 🤖 Machine Learning-based HR refinement
+* 📊 Dataset evaluation (Accuracy, MAE, R²)
+* 📄 PDF report generation
+* 🖥️ Streamlit UI
 
 ---
 
-## 🧠 How It Works
+## 🧠 Concepts Used
 
-1. Webcam captures video frames.
-2. Face is detected using Haar Cascade.
-3. Forehead region is extracted.
-4. Average RGB values are collected over time.
-5. POS algorithm enhances pulse-related signal.
-6. Bandpass filter isolates:
-   - Heart rate band (0.8–2.5 Hz)
-   - Respiratory band (0.1–0.5 Hz)
-7. FFT identifies dominant frequency.
-8. Frequency is converted to BPM.
-9. Optional ML model refines heart rate prediction.
+* **rPPG** – Extracts pulse from skin color changes
+* **POS Algorithm** – Reduces noise and motion artifacts
+* **FFT** – Converts signal to frequency domain
+* **Bandpass Filtering**
+
+  * HR: 0.8 – 2.5 Hz
+  * RR: 0.1 – 0.5 Hz
 
 ---
 
-## 📂 Project Structure
-FaceVitals/
-│
-├── app.py # OpenCV real-time implementation
-├── streamlit_app.py # Streamlit web application
-├── train_model.py # ML training script
-├── models/
-│ └── heart_rate_model.pkl # Trained ML model
-├── haarcascade_frontalface_default.xml
-└── README.md
+## 🔄 Workflow
+
+1. Capture video from webcam
+2. Detect face and extract forehead region
+3. Collect RGB signals over time
+4. Apply POS algorithm
+5. Filter signals using bandpass
+6. Apply FFT to detect dominant frequency
+7. Convert frequency → HR & RR
+8. Improve HR using ML model
 
 ---
 
-## 🛠 Requirements
+## ⚙️ Installation
 
-Install required libraries:
+Install all required dependencies using pip:
 
 ```bash
-pip install opencv-python numpy scipy matplotlib scikit-learn streamlit joblib
-▶ How to Run
-OpenCV Version
-python app.py
+pip install streamlit opencv-python numpy scipy matplotlib scikit-learn joblib reportlab
+```
+
+---
+
+### 📦 Libraries Used
+
+* **streamlit** → Web interface
+* **opencv-python (cv2)** → Face detection & video capture
+* **numpy** → Numerical computations
+* **scipy** → Signal processing (filtering, detrending)
+* **matplotlib** → Signal visualization
+* **scikit-learn** → Machine learning model
+* **joblib** → Model saving/loading
+* **reportlab** → PDF report generation
+
+---
+
+### 📁 Additional Requirements
+
+* Ensure a `models/` folder containing:
+
+  * `heart_rate_model.pkl`
+  * `scaler.pkl`
+
+* Ensure a `Dataset/` folder for evaluation (optional but required for dataset testing)
+
+---
 
 
-Stay still during 20-second recording.
+---
 
-Streamlit Version
-streamlit run streamlit_app.py
+## ▶️ Usage
+
+```bash
+streamlit run app.py
+```
+
+---
+
+# 🚀 Results & Outputs
+
+## ❤️ Live Measurement Output
+
+* **Heart Rate (HR):** 56.09 BPM
+* **Respiratory Rate (RR):** 10.20 breaths/min
+* **Confidence Level:** High
+* **Signal Quality:** Good Signal ✅
+
+---
+
+## 📈 Temporal Signal Analysis
 
 
-Click Start Measurement and remain steady.
+<img width="1384" height="746" alt="ab9b0548d58fee24eb5e373f14b04acd100dff45e0c88c017eea74a8" src="https://github.com/user-attachments/assets/42197d72-f9ae-45dd-b0d5-cb3e54a4c339" />
 
-📊 Output
+---
 
-The system displays:
+## 📊 Dataset Results
+<img width="1330" height="401" alt="Screenshot 2026-03-22 164852" src="https://github.com/user-attachments/assets/409af278-a0c9-4194-a8aa-6433ef2c21db" />
 
-FFT Heart Rate (BPM)
 
-ML Heart Rate (if model available)
 
-Respiratory Rate (Breaths/min)
 
-POS signal graph
+---
 
-Filtered heart & respiratory signals
+## 📉 Ground Truth vs Predicted
 
-⚠ Limitations
+<img width="1104" height="869" alt="46171056b268c6fb0cad88d72cfa78448e57e6d79ad87c8d7ae74590" src="https://github.com/user-attachments/assets/baa57deb-6440-41fb-8e08-471f333e3274" />
 
-Sensitive to motion
 
-Sensitive to lighting conditions
+---
 
-Not medical-grade accuracy
+## 📈 Overall Performance
 
-Requires stable webcam positioning
+* ✅ **Average Accuracy:** 94.66%
+* 📉 **MAE:** 5.84 BPM
+* 📈 **R² Score:** -0.642
 
-🚀 Future Improvements
+---
 
-Deep learning based rPPG
+## 🤖 Machine Learning Model
 
-Better motion compensation
+* Model: **Gradient Boosting Regressor**
+* Features:
 
-Real-time mobile application
+  * Mean
+  * Standard Deviation
+  * Dominant Frequency
+  * Max / Min
+  * Median
+  * Percentiles
+  * Variance
 
-Cloud-based health monitoring dashboard
+---
 
-👨‍💻 Author
+## ⚠️ Limitations
 
-Mohith Reddy
-B.Tech Major Project
-Computer Vision & Biomedical Signal Processing
+* Sensitive to lighting
+* Affected by movement
+* Requires stable positioning
+* Not a medical-grade device
+
+---
+
+## 🔮 Future Improvements
+
+* Deep learning-based rPPG
+* Mobile app integration
+* Motion robustness
+* Multi-face tracking
+
+---
+
+## 👨‍💻 Author
+
+**K. Mohith Reddy**
+Final Year Computer science & engineering
+
+---
+
+## ⭐ Support
+
+If you like this project, give it a ⭐ on GitHub!
+
+---
