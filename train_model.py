@@ -2,8 +2,10 @@ import cv2
 import numpy as np
 import os
 from scipy.signal import butter, filtfilt, detrend
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 import joblib
 
 # ---------------- SETTINGS ----------------
@@ -34,7 +36,6 @@ for subject in subjects:
     video_path = None
     gt_path = None
 
-    # Auto search inside folder
     for root, dirs, files in os.walk(subject_path):
         if "vid.avi" in files and "ground_truth.txt" in files:
             video_path = os.path.join(root, "vid.avi")
@@ -52,14 +53,12 @@ for subject in subjects:
         continue
 
     rgb_signal = []
-    frame_count = 0
 
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        frame_count += 1
         h, w, _ = frame.shape
 
         # Forehead ROI
@@ -78,19 +77,15 @@ for subject in subjects:
 
     cap.release()
 
-    print("Frames:", frame_count)
-    print("RGB length:", len(rgb_signal))
-
     rgb_signal = np.array(rgb_signal)
 
     if len(rgb_signal) < fps * 5:
         print("Not enough signal")
         continue
 
-    # ---------------- POS ALGORITHM ----------------
+    # ---------------- POS ----------------
     mean_rgb = np.mean(rgb_signal, axis=0)
     rgb_norm = rgb_signal / mean_rgb
-
     X_rgb = rgb_norm.T
 
     S1 = X_rgb[0] - X_rgb[1]
@@ -98,10 +93,9 @@ for subject in subjects:
 
     alpha = np.std(S1) / np.std(S2)
     pos_signal = S1 + alpha * S2
-
     signal = detrend(pos_signal)
 
-    # ---------------- HEART BAND ----------------
+    # ---------------- HEART SIGNAL ----------------
     heart_signal = bandpass(signal, 0.8, 2.5, fps)
 
     fft_hr = np.abs(np.fft.rfft(heart_signal))
@@ -113,11 +107,17 @@ for subject in subjects:
 
     dominant_freq = freq_hr[valid][np.argmax(fft_hr[valid])]
 
+    # ✅ IMPROVED FEATURES (9 FEATURES)
     features = [
         np.mean(heart_signal),
         np.std(heart_signal),
         dominant_freq,
-        np.max(fft_hr[valid])
+        np.max(fft_hr[valid]),
+        np.min(heart_signal),
+        np.median(heart_signal),
+        np.percentile(heart_signal, 25),
+        np.percentile(heart_signal, 75),
+        np.var(heart_signal)
     ]
 
     # ---------------- GROUND TRUTH ----------------
@@ -133,7 +133,7 @@ for subject in subjects:
     X.append(features)
     y.append(gt_hr)
 
-# ---------------- TRAIN MODEL ----------------
+# ---------------- CHECK DATA ----------------
 if len(X) == 0:
     print("No valid data found!")
     exit()
@@ -141,21 +141,43 @@ if len(X) == 0:
 X = np.array(X)
 y = np.array(y)
 
-model = RandomForestRegressor(n_estimators=100, random_state=42)
-model.fit(X, y)
+# ---------------- TRAIN TEST SPLIT ----------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
 
-# -------- Accuracy --------
-predictions = model.predict(X)
-mae = mean_absolute_error(y, predictions)
-r2 = r2_score(y, predictions)
+# ---------------- SCALING ----------------
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
 
-print("\nModel trained successfully!")
+# ---------------- MODEL ----------------
+model = GradientBoostingRegressor(
+    n_estimators=200,
+    learning_rate=0.05,
+    max_depth=3,
+    random_state=42
+)
+
+model.fit(X_train, y_train)
+
+# ---------------- EVALUATION ----------------
+predictions = model.predict(X_test)
+
+mae = mean_absolute_error(y_test, predictions)
+r2 = r2_score(y_test, predictions)
+
+print("\n================ MODEL RESULTS ================")
 print("Subjects used:", len(X))
 print("MAE:", round(mae, 2), "BPM")
-print("R2:", round(r2, 3))
+print("R2 Score:", round(r2, 3))
+print("==============================================")
 
+# ---------------- SAVE MODEL + SCALER ----------------
 if not os.path.exists("models"):
     os.makedirs("models")
 
 joblib.dump(model, "models/heart_rate_model.pkl")
-print("Model saved.")
+joblib.dump(scaler, "models/scaler.pkl")
+
+print("Model and scaler saved successfully!")
