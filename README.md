@@ -49,12 +49,35 @@ using a standard camera by analyzing **temporal pixel variations** in facial ski
 8. Improve HR using ML model
 
 ---
-
 ## ⚙️ Installation
 
-Install all required dependencies using pip:
+### 🔹 Step 1: (Optional but Recommended) Create Virtual Environment
 
-```bash
+```bash id="venv1"
+python -m venv venv
+```
+
+---
+
+### 🔹 Step 2: Activate Virtual Environment
+
+#### 🪟 Windows:
+
+```bash id="venv2"
+venv\Scripts\activate
+```
+
+#### 🐧 Linux / Mac:
+
+```bash id="venv3"
+source venv/bin/activate
+```
+
+---
+
+### 🔹 Step 3: Install Dependencies
+
+```bash id="venv4"
 pip install streamlit opencv-python numpy scipy matplotlib scikit-learn joblib reportlab
 ```
 
@@ -62,25 +85,21 @@ pip install streamlit opencv-python numpy scipy matplotlib scikit-learn joblib r
 
 ### 📦 Libraries Used
 
-* **streamlit** → Web interface
+* **streamlit** → UI
 * **opencv-python (cv2)** → Face detection & video capture
-* **numpy** → Numerical computations
-* **scipy** → Signal processing (filtering, detrending)
-* **matplotlib** → Signal visualization
-* **scikit-learn** → Machine learning model
+* **numpy** → Numerical operations
+* **scipy** → Signal processing
+* **matplotlib** → Visualization
+* **scikit-learn** → Machine learning
 * **joblib** → Model saving/loading
-* **reportlab** → PDF report generation
+* **reportlab** → PDF generation
 
 ---
 
-### 📁 Additional Requirements
+### 📁 Required Folders
 
-* Ensure a `models/` folder containing:
-
-  * `heart_rate_model.pkl`
-  * `scaler.pkl`
-
-* Ensure a `Dataset/` folder for evaluation (optional but required for dataset testing)
+* `models/` → contains trained model files
+* `Dataset/` → used for evaluation
 
 ---
 
