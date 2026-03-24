@@ -245,6 +245,25 @@ if st.session_state.live_results is not None:
     st.info(f"Confidence Level: {confidence}")
     st.info(f"Signal Quality: {quality}")
 
+    # ✅ ADD FROM HERE 👇
+    st.subheader("💊 Health Suggestion")
+
+    # Heart Rate Suggestion
+    if hr < 60:
+        st.warning("Heart rate is low → Stay active and consult a doctor if needed")
+    elif hr > 100:
+        st.warning("Heart rate is high → Please relax, stay calm, and avoid stress")
+    else:
+        st.success("Heart rate is normal → Keep maintaining a healthy lifestyle")
+
+    # Respiratory Rate Suggestion
+    if rr < 12:
+        st.warning("Breathing rate is low → Get fresh air and monitor your condition")
+    elif rr > 18:
+        st.warning("Breathing rate is high → Take deep breaths and try to relax")
+    else:
+        st.success("Breathing rate is normal")
+    # ✅ END HERE
     fig, ax = plt.subplots(figsize=(8,4))
     ax.plot(signal, label="POS Signal")
     ax.plot(heart_signal, label="Heart Band")
