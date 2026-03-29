@@ -95,32 +95,7 @@ for subject in subjects:
     pos_signal = S1 + alpha * S2
     signal = detrend(pos_signal)
 
-    # ---------------- HEART SIGNAL ----------------
-    heart_signal = bandpass(signal, 0.8, 2.5, fps)
-
-    fft_hr = np.abs(np.fft.rfft(heart_signal))
-    freq_hr = np.fft.rfftfreq(len(heart_signal), d=1/fps)
-    valid = (freq_hr >= 0.8) & (freq_hr <= 2.5)
-
-    if np.sum(valid) == 0:
-        continue
-
-    dominant_freq = freq_hr[valid][np.argmax(fft_hr[valid])]
-
-    # ✅ IMPROVED FEATURES (9 FEATURES)
-    features = [
-        np.mean(heart_signal),
-        np.std(heart_signal),
-        dominant_freq,
-        np.max(fft_hr[valid]),
-        np.min(heart_signal),
-        np.median(heart_signal),
-        np.percentile(heart_signal, 25),
-        np.percentile(heart_signal, 75),
-        np.var(heart_signal)
-    ]
-
-    # ---------------- GROUND TRUTH ----------------
+    # ---------------- GROUND TRUTH (FIRST!) ----------------
     with open(gt_path, "r") as f:
         lines = f.readlines()
 
@@ -130,8 +105,48 @@ for subject in subjects:
     hr_values = np.array([float(x) for x in lines[1].split()])
     gt_hr = np.mean(hr_values)
 
-    X.append(features)
-    y.append(gt_hr)
+    # ---------------- SLIDING WINDOW ----------------
+    window_size = fps * 15   # 15 seconds
+    step_size = fps * 2      # overlap
+
+    for start in range(0, len(signal) - window_size, step_size):
+
+        segment = signal[start:start + window_size]
+        if np.std(segment) < 0.02:
+            continue
+
+        heart_signal = bandpass(segment, 0.8, 2.5, fps)
+
+        fft_hr = np.abs(np.fft.rfft(heart_signal))
+        freq_hr = np.fft.rfftfreq(len(heart_signal), d=1/fps)
+
+        valid = (freq_hr >= 0.8) & (freq_hr <= 2.5)
+
+        if np.sum(valid) == 0:
+            continue
+
+        dominant_freq = freq_hr[valid][np.argmax(fft_hr[valid])]
+        hr = dominant_freq * 60
+        if hr < 50 or hr > 120:
+            continue
+
+        features = [
+            np.mean(heart_signal),
+            np.std(heart_signal),
+            dominant_freq,
+            np.max(fft_hr[valid]),
+            np.min(heart_signal),
+            np.median(heart_signal),
+            np.percentile(heart_signal, 25),
+            np.percentile(heart_signal, 75),
+            np.var(heart_signal)
+        ]
+
+        # ✅ Correct target
+        gt_segment = gt_hr
+
+        X.append(features)
+        y.append(gt_segment)
 
 # ---------------- CHECK DATA ----------------
 if len(X) == 0:
@@ -168,7 +183,7 @@ mae = mean_absolute_error(y_test, predictions)
 r2 = r2_score(y_test, predictions)
 
 print("\n================ MODEL RESULTS ================")
-print("Subjects used:", len(X))
+print("Samples used:", len(X))
 print("MAE:", round(mae, 2), "BPM")
 print("R2 Score:", round(r2, 3))
 print("==============================================")
