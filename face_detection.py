@@ -7,7 +7,7 @@ import time
 # ---------------- SETTINGS ----------------
 fps = 30
 record_seconds = 20
-window_seconds = 10
+window_seconds = 15
 window_size = fps * window_seconds
 step_size = fps * 1
 
