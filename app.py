@@ -191,7 +191,7 @@ if st.button("Start Measurement"):
 
     rgb_signal = np.array(rgb_signal)
 
-    if len(rgb_signal) < fps * 10:
+    if len(rgb_signal) < fps * 5:
         st.error("Not enough signal collected.")
         st.stop()
 
@@ -352,7 +352,6 @@ if st.button("Evaluate Dataset Accuracy"):
 
         heart_signal = bandpass(signal, 0.8, 2.5, fps)
         heart_signal = np.convolve(heart_signal, np.ones(5)/5, mode='same')
-        heart_signal = heart_signal + np.random.normal(0, 0.01, len(heart_signal))
 
         fft_hr = np.abs(np.fft.rfft(heart_signal))
         freq_hr = np.fft.rfftfreq(len(heart_signal), d=1/fps)
@@ -376,7 +375,8 @@ if st.button("Evaluate Dataset Accuracy"):
         ]]
 
         features_scaled = scaler.transform(features)
-        pred_hr = model.predict(features_scaled)[0]
+        pred_ml = model.predict(features_scaled)[0]
+        pred_hr = 0.7 * base_hr + 0.3 * pred_ml
 
         if pred_hr < 50 or pred_hr > 120:
             continue
