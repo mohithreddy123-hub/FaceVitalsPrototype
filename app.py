@@ -144,7 +144,7 @@ if st.button("Start Measurement"):
     start_time = time.time()
 
     fps = 30
-    record_seconds = 20
+    record_seconds = 40
 
     face_cascade = cv2.CascadeClassifier(
         cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
@@ -210,7 +210,10 @@ if st.button("Start Measurement"):
         return filtfilt(b, a, sig)
 
     heart_signal = bandpass(signal, 0.8, 2.5, fps)
-    resp_signal = bandpass(signal, 0.1, 0.5, fps)
+    green_signal = rgb_signal[:, 1]   # extract green channel
+    green_signal = detrend(green_signal)
+    resp_signal = bandpass(green_signal, 0.1, 0.5, fps)
+    resp_signal = np.convolve(resp_signal, np.ones(10)/10, mode='same')
 
     fft_hr = np.abs(np.fft.rfft(heart_signal))
     freq_hr = np.fft.rfftfreq(len(heart_signal), d=1/fps)
@@ -221,8 +224,11 @@ if st.button("Start Measurement"):
     fft_rr = np.abs(np.fft.rfft(resp_signal))
     freq_rr = np.fft.rfftfreq(len(resp_signal), d=1/fps)
     valid_rr = (freq_rr >= 0.1) & (freq_rr <= 0.5)
-
-    rr = freq_rr[valid_rr][np.argmax(fft_rr[valid_rr])] * 60
+    # 👉 ADD THIS CHECK
+    if np.max(fft_rr[valid_rr]) < 0.02:
+        rr = 0   # or you can skip showing RR
+    else:
+        rr = freq_rr[valid_rr][np.argmax(fft_rr[valid_rr])] * 60
 
     # ✅ Confidence Indicator (ADDED)
     confidence = "High" if np.std(signal) < 0.5 else "Medium"
@@ -334,8 +340,12 @@ if st.button("Evaluate Dataset Accuracy"):
                 rgb_signal.append([r, g, b])
 
         cap.release()
+        clean_signal = []
 
-        rgb_signal = np.array(rgb_signal)
+        for i in range(len(rgb_signal)):
+            if np.std(rgb_signal[i]) > 1:   # threshold
+                clean_signal.append(rgb_signal[i])
+        rgb_signal = np.array(clean_signal)
 
         if len(rgb_signal) < fps * 5:
             continue
