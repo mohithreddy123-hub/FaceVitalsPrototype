@@ -6,6 +6,7 @@
 
 * ❤️ **Heart Rate (HR)** – Beats Per Minute (BPM)
 * 🌬️ **Respiratory Rate (RR)** – Breaths Per Minute
+* 
 
 using a standard camera by analyzing **temporal pixel variations in facial skin**.
 
